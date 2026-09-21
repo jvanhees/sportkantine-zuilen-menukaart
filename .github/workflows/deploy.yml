@@ -1,0 +1,42 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.pages.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Schrijf config.js
+        env:
+          SHEET_ID: ${{ secrets.SHEET_ID }}
+          SHEETS_API_KEY: ${{ secrets.SHEETS_API_KEY }}
+        run: |
+          test -n "$SHEET_ID" || { echo "secret SHEET_ID ontbreekt"; exit 1; }
+          test -n "$SHEETS_API_KEY" || { echo "secret SHEETS_API_KEY ontbreekt"; exit 1; }
+          node -e 'const c={sheetId:process.env.SHEET_ID,apiKey:process.env.SHEETS_API_KEY};
+            require("fs").writeFileSync("site/config.js","window.MENU_CONFIG = "+JSON.stringify(c)+";\n")'
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - id: pages
+        uses: actions/deploy-pages@v4

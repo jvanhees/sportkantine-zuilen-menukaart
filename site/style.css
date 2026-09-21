@@ -1,0 +1,104 @@
+:root {
+  --schaal: 1;
+  --bg: #12161c;
+  --vlak: #1a2029;
+  --tekst: #f2f4f7;
+  --zacht: #97a3b4;
+  --accent: #ffc247;
+  --lijn: #2a323d;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--tekst);
+  font-family: "Inter", "Helvetica Neue", Arial, sans-serif;
+  font-size: calc(16px * var(--schaal));
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 1.4rem 1.8rem;
+  gap: 1rem;
+}
+
+.kop { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+h1 { font-size: 2.6rem; line-height: 1.05; letter-spacing: -0.02em; }
+#ondertitel { color: var(--zacht); font-size: 1.15rem; margin-top: 0.15rem; }
+
+#printknop {
+  background: var(--vlak); color: var(--tekst); border: 1px solid var(--lijn);
+  border-radius: 6px; padding: 0.5rem 0.9rem; font: inherit; font-size: 0.9rem; cursor: pointer;
+}
+
+#mededeling {
+  background: var(--accent); color: #1a1205;
+  padding: 0.6rem 1rem; border-radius: 6px;
+  font-size: 1.3rem; font-weight: 600;
+}
+
+#kaart {
+  flex: 1;
+  columns: 3;
+  column-gap: 2.4rem;
+}
+
+.groep { break-inside: avoid; margin-bottom: 1.5rem; }
+
+.groep h2 {
+  font-size: 1.35rem;
+  color: var(--accent);
+  border-bottom: 2px solid var(--lijn);
+  padding-bottom: 0.25rem;
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.regel {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-size: 1.45rem;
+  line-height: 1.55;
+}
+
+.regel .naam { flex: 0 1 auto; }
+.regel .vul { flex: 1 1 auto; border-bottom: 1px dotted var(--lijn); transform: translateY(-0.25em); }
+.regel .prijs { flex: none; font-variant-numeric: tabular-nums; }
+
+.regel.op .naam, .regel.op .prijs { text-decoration: line-through; }
+
+.opisop {
+  flex: none;
+  font-size: 0.62em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  padding: 0.05em 0.5em;
+  white-space: nowrap;
+}
+
+.voet {
+  display: flex; justify-content: space-between;
+  color: var(--zacht); font-size: 0.85rem;
+  border-top: 1px solid var(--lijn); padding-top: 0.6rem;
+}
+#status.oud { color: var(--accent); }
+
+@media print {
+  @page { size: A4 portrait; margin: 14mm; }
+  body { background: #fff; color: #000; font-size: 11pt; padding: 0; display: block; }
+  #printknop, #status, .regel .vul { display: none; }
+  h1 { font-size: 22pt; }
+  #ondertitel, .voet { color: #444; }
+  #mededeling { background: none; color: #000; border: 1pt solid #000; font-size: 11pt; }
+  #kaart { columns: 2; column-gap: 12mm; margin-top: 6mm; }
+  .groep h2 { font-size: 12pt; color: #000; border-bottom: 1pt solid #000; }
+  .regel { font-size: 11pt; line-height: 1.5; justify-content: space-between; }
+  .regel.op .naam, .regel.op .prijs { text-decoration: none; }
+  .opisop { color: #000; }
+  .voet { border-top: 1pt solid #000; }
+}

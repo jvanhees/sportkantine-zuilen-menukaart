@@ -1,0 +1,4 @@
+window.MENU_CONFIG = {
+  sheetId: 'PLAK_HIER_HET_SPREADSHEET_ID',
+  apiKey: 'PLAK_HIER_DE_API_KEY',
+};
