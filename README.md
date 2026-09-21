@@ -73,6 +73,9 @@ een handmatig overschreven prijs.
 
 ## Pagina
 
+- De kolommen worden door CSS gevuld (`flex-flow: column wrap`). JavaScript zoekt
+  alleen de grootste tekstmaat die nog past, en verhoogt het aantal kolommen als
+  drie niet genoeg is.
 - Ververst elke 60 seconden. Bij een storing blijft de laatste versie staan; de
   tijdstempel rechtsonder kleurt na 45 minuten.
 - `?kiosk` verbergt de printknop.
@@ -86,4 +89,33 @@ cp site/config.example.js site/config.js   # vul sheetId en apiKey in
 python3 -m http.server -d site 8000
 ```
 
+Let op: de API-key is beperkt tot de Pages-origin, dus vanaf localhost werkt de
+echte sheet niet. Voor lokaal testen kun je in `site/config.js` ook `window.fetch`
+vervangen door een vaste kopie van de sheetdata.
+
 `site/config.js` staat in `.gitignore`.
+
+## Layout testen
+
+De kaart schaalt zichzelf zodat alles precies op het scherm past. Dat is niet met
+het blote oog te controleren, dus er staat een browser-harnas in `tools/`:
+
+```
+npm install
+npm run shot      # rendert site/ op 1920x1080, schrijft schermafdruk.png
+npm run stress    # 18 combinaties van hoeveelheid en schermformaat
+npm run pdf       # rendert de A4-print naar /tmp/menu.pdf
+```
+
+`npm run shot` en `npm run stress` geven een exitcode ongelijk aan nul zodra er
+iets buiten beeld valt, en rapporteren de gekozen schaal en kolomindeling.
+
+Dit draait op de chromium uit de Playwright-cache. Die mist drie
+toegankelijkheidsbibliotheken, die eenmalig zonder root klaargezet zijn in
+`~/.local/lib/chrome-extra`:
+
+```
+cd /tmp && for p in libatk1.0-0t64 libatk-bridge2.0-0t64 libatspi2.0-0t64; do apt-get download $p; done
+for d in *.deb; do dpkg-deb -x "$d" x/; done
+mkdir -p ~/.local/lib/chrome-extra && cp -r x/usr/lib/x86_64-linux-gnu/* ~/.local/lib/chrome-extra/
+```

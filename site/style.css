@@ -1,5 +1,7 @@
 :root {
   --schaal: 1;
+  --kolommen: 3;
+  --kolomgat: 48px;
   --bg: #1b2027;
   --vlak: #303841;
   --lijn: #3c4650;
@@ -10,6 +12,8 @@
   --uitverkocht: #626d79;
 }
 
+html { font-size: calc(16px * var(--schaal)); }
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
@@ -17,7 +21,7 @@ body {
   color: var(--tekst);
   font-family: "Jost", "Helvetica Neue", Arial, sans-serif;
   font-weight: 400;
-  font-size: calc(16px * var(--schaal));
+  font-size: 1rem;
   height: 100vh;
   overflow: hidden;
   display: flex;
@@ -56,11 +60,16 @@ h1 {
   min-height: 0;
   overflow: hidden;
   display: flex;
-  align-items: flex-start;
-  gap: 3rem;
+  flex-flow: column wrap;
+  align-content: flex-start;
+  column-gap: var(--kolomgat);
 }
 
-.kolom { flex: 1 1 0; min-width: 0; }
+/* Vaste breedte in px, niet in rem: de kolombreedte mag niet meebewegen met de
+   schaal, anders verandert de regelafbreking tijdens het zoeken naar de maat. */
+.groep {
+  width: calc((100% - (var(--kolommen) - 1) * var(--kolomgat)) / var(--kolommen));
+}
 
 .groep { margin-bottom: 2.1rem; }
 .groep:last-child { margin-bottom: 0; }
@@ -133,18 +142,18 @@ h1 {
 @media print {
   @page { size: A4 portrait; margin: 14mm; }
   body { background: #fff; color: #000; font-size: 11pt; padding: 0; display: block; height: auto; overflow: visible; }
-  .deeltjes, #printknop, #status, .regel .vul { display: none; }
+  .deeltjes, #printknop, #status { display: none; }
   h1 { font-size: 24pt; }
   #ondertitel { color: #444; font-size: 12pt; }
   .voet { color: #444; border-top: 1pt solid #000; }
   #mededeling { background: none; color: #000; border: 1pt solid #000; font-size: 11pt; }
   :root { --schaal: 1 !important; }
   #kaart { display: block; columns: 2; column-gap: 12mm; margin-top: 6mm; overflow: visible; }
-  .kolom { display: contents; }
-  .groep { break-inside: avoid; }
+  .groep { width: auto; break-inside: avoid; }
   .groep { margin-bottom: 6mm; }
   .groep h2 { font-size: 12pt; color: #000; border-bottom: 1pt solid #000; }
   .regel { font-size: 11pt; line-height: 1.6; }
+  .regel .vul { border-bottom-color: #bbb; }
   .regel.op, .item.op .regel { color: #000; }
   .beschrijving, .item.op .beschrijving { color: #444; font-size: 9pt; margin: -0.2rem 0 0.3rem; }
   .regel.op .naam, .regel.op .prijs { text-decoration: none; }

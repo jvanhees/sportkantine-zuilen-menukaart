@@ -1,0 +1,13 @@
+{
+  "name": "sportkantine-zuilen-menukaart",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "shot": "LD_LIBRARY_PATH=$HOME/.local/lib/chrome-extra node tools/shot.mjs",
+    "stress": "LD_LIBRARY_PATH=$HOME/.local/lib/chrome-extra node tools/stress.mjs",
+    "pdf": "LD_LIBRARY_PATH=$HOME/.local/lib/chrome-extra CHROME=$HOME/.cache/ms-playwright/chromium_headless_shell-1234/chrome-headless-shell-linux64/chrome-headless-shell node tools/pdf.mjs"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.56.0"
+  }
+}

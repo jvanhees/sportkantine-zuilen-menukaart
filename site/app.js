@@ -1,7 +1,8 @@
 const CFG = Object.assign({ refreshMs: 60000, oudNaMs: 45 * 60000 }, window.MENU_CONFIG || {});
 const CACHE = 'menukaart.laatste';
-const KOLOMMEN = 3;
-const MIN_SCHAAL = 0.35;
+const KOLOMKEUZES = [3, 4, 5, 6, 8];
+const LEESBAAR = 0.6;
+const MIN_SCHAAL = 0.2;
 const MAX_SCHAAL = 2.4;
 let laatsteModel = null;
 
@@ -152,100 +153,56 @@ function teken({ teksten, groepen }) {
   });
 
   laatsteModel = { teksten, groepen };
-  vulKaart(blokken);
+  el('kaart').replaceChildren(...blokken);
+  pasSchaalAan();
 }
 
 // Zoekt de grootste schaal die nog op het scherm past, zodat de kolommen het beeld
 // vullen in plaats van bovenaan te blijven hangen.
-function telOmkeringen(kolom) {
-  let n = 0;
-  for (let i = 0; i < kolom.length; i++)
-    for (let j = i + 1; j < kolom.length; j++) if (kolom[i] > kolom[j]) n++;
-  return n;
-}
-
-function verdeelGretig(hoogtes, n) {
-  const som = new Array(n).fill(0);
-  const kolom = hoogtes.map(function (h) {
-    let k = 0;
-    for (let i = 1; i < n; i++) if (som[i] < som[k]) k = i;
-    som[k] += h;
-    return k;
-  });
-  return { max: Math.max(...som), kolom };
-}
-
-// Zoekt de verdeling met de kortste hoogste kolom, want die bepaalt hoe groot de
-// tekst kan worden. Bij gelijke hoogte wint de verdeling die de categorievolgorde
-// het minst omgooit.
-function verdeel(hoogtes, n) {
-  const g = hoogtes.length;
-  if (!g) return { max: 0, kolom: [] };
-  if (Math.pow(n, g) > 60000) return verdeelGretig(hoogtes, n);
-
-  const kolom = new Array(g);
-  const som = new Array(n).fill(0);
-  let beste = null;
-
-  const zoek = function (i) {
-    if (i === g) {
-      const max = Math.max.apply(null, som);
-      if (beste && max > beste.max + 0.5) return;
-      const omkeringen = telOmkeringen(kolom);
-      if (!beste || max < beste.max - 0.5 || omkeringen < beste.omkeringen)
-        beste = { max: max, omkeringen: omkeringen, kolom: kolom.slice() };
-      return;
-    }
-    for (let k = 0; k < n; k++) {
-      kolom[i] = k;
-      som[k] += hoogtes[i];
-      zoek(i + 1);
-      som[k] -= hoogtes[i];
-    }
-  };
-  zoek(0);
-  return beste;
-}
-
-// CSS-kolommen fragmenteren op een manier die niet betrouwbaar te meten is; een
-// overlopende kolom verdween buiten beeld. Daarom de verdeling hier zelf doen.
-function vulKaart(blokken) {
+// CSS vult de kolommen (flex column wrap). Het enige dat CSS niet kan is meten,
+// dus hier blijft het zoeken naar de grootste maat die nog past, en het aantal
+// kolommen dat daarvoor nodig is.
+function pasSchaalAan() {
   const kaart = el('kaart');
   const root = document.documentElement;
 
-  const kolommen = [];
-  for (let i = 0; i < KOLOMMEN; i++) {
-    const d = document.createElement('div');
-    d.className = 'kolom';
-    kolommen.push(d);
-  }
-  kaart.replaceChildren(...kolommen);
-  if (!blokken.length) return;
-  kolommen[0].append(...blokken);
-
-  const meet = () => {
-    const marge = parseFloat(getComputedStyle(blokken[0]).marginBottom) || 0;
-    return blokken.map(b => b.getBoundingClientRect().height + marge);
-  };
+  // Op hele pixels meten is niet nauwkeurig genoeg: bij grote maten liep de kaart
+  // er een fractie overheen terwijl scrollHeight nog gelijk was aan clientHeight.
   const past = schaal => {
-    root.style.setProperty('--schaal', schaal);
-    return verdeel(meet(), KOLOMMEN).max <= kaart.clientHeight + 1;
+    root.style.setProperty('--schaal', String(schaal));
+    const groepen = kaart.children;
+    if (!groepen.length) return true;
+    if (kaart.scrollWidth > kaart.clientWidth || kaart.scrollHeight > kaart.clientHeight) return false;
+    const vak = kaart.getBoundingClientRect();
+    for (const g of groepen) {
+      const r = g.getBoundingClientRect();
+      if (r.bottom > vak.bottom + 0.5 || r.right > vak.right + 0.5) return false;
+    }
+    return true;
   };
 
-  let klein = MIN_SCHAAL;
-  if (past(MAX_SCHAAL)) {
-    klein = MAX_SCHAAL;
-  } else {
-    let groot = MAX_SCHAAL;
-    for (let i = 0; i < 16; i++) {
+  const zoek = () => {
+    if (past(MAX_SCHAAL)) return MAX_SCHAAL;
+    let klein = MIN_SCHAAL, groot = MAX_SCHAAL;
+    for (let i = 0; i < 18; i++) {
       const mid = (klein + groot) / 2;
       if (past(mid)) klein = mid; else groot = mid;
     }
-    root.style.setProperty('--schaal', klein);
+    return past(klein) ? klein : null;
+  };
+
+  let beste = null;
+  for (const kolommen of KOLOMKEUZES) {
+    root.style.setProperty('--kolommen', String(kolommen));
+    const schaal = zoek();
+    if (schaal === null) continue;
+    if (!beste || schaal > beste.schaal) beste = { kolommen, schaal };
+    if (schaal >= LEESBAAR) break;
   }
 
-  const kolom = verdeel(meet(), KOLOMMEN).kolom;
-  blokken.forEach((b, i) => kolommen[kolom[i]].append(b));
+  if (!beste) beste = { kolommen: KOLOMKEUZES[KOLOMKEUZES.length - 1], schaal: MIN_SCHAAL };
+  root.style.setProperty('--kolommen', String(beste.kolommen));
+  root.style.setProperty('--schaal', String(beste.schaal));
 }
 
 function toonStatus(op, gelukt) {
