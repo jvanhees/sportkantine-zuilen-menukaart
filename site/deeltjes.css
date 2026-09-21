@@ -1,0 +1,267 @@
+.deeltjes {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.deeltjes span {
+  position: absolute;
+  bottom: -14vh;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--accent);
+  animation-name: zweef;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: transform;
+}
+
+.deeltjes span:nth-child(3n) { background: var(--rood); }
+.deeltjes span:nth-child(5n) { background: var(--tekst); }
+
+@keyframes zweef {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to   { transform: translate3d(6vw, -128vh, 0) scale(1.9); }
+}
+
+.deeltjes span:nth-child(1) {
+  left: 32.4%;
+  width: 6px;
+  animation-duration: 37s;
+  animation-delay: -3s;
+  opacity: 0.30;
+}
+
+.deeltjes span:nth-child(2) {
+  left: 9.4%;
+  width: 4px;
+  animation-duration: 55s;
+  animation-delay: -12s;
+  opacity: 0.14;
+}
+
+.deeltjes span:nth-child(3) {
+  left: 41.8%;
+  width: 8px;
+  animation-duration: 27s;
+  animation-delay: -25s;
+  opacity: 0.30;
+}
+
+.deeltjes span:nth-child(4) {
+  left: 12.4%;
+  width: 8px;
+  animation-duration: 45s;
+  animation-delay: -34s;
+  opacity: 0.13;
+}
+
+.deeltjes span:nth-child(5) {
+  left: 58.6%;
+  width: 4px;
+  animation-duration: 57s;
+  animation-delay: -3s;
+  opacity: 0.31;
+}
+
+.deeltjes span:nth-child(6) {
+  left: 29.0%;
+  width: 6px;
+  animation-duration: 42s;
+  animation-delay: -33s;
+  opacity: 0.24;
+}
+
+.deeltjes span:nth-child(7) {
+  left: 68.2%;
+  width: 5px;
+  animation-duration: 44s;
+  animation-delay: -37s;
+  opacity: 0.20;
+}
+
+.deeltjes span:nth-child(8) {
+  left: 54.8%;
+  width: 5px;
+  animation-duration: 43s;
+  animation-delay: -36s;
+  opacity: 0.23;
+}
+
+.deeltjes span:nth-child(9) {
+  left: 53.2%;
+  width: 13px;
+  animation-duration: 40s;
+  animation-delay: -54s;
+  opacity: 0.20;
+}
+
+.deeltjes span:nth-child(10) {
+  left: 24.8%;
+  width: 6px;
+  animation-duration: 48s;
+  animation-delay: -14s;
+  opacity: 0.25;
+}
+
+.deeltjes span:nth-child(11) {
+  left: 52.5%;
+  width: 13px;
+  animation-duration: 49s;
+  animation-delay: -17s;
+  opacity: 0.34;
+}
+
+.deeltjes span:nth-child(12) {
+  left: 11.8%;
+  width: 16px;
+  animation-duration: 30s;
+  animation-delay: -20s;
+  opacity: 0.33;
+}
+
+.deeltjes span:nth-child(13) {
+  left: 42.2%;
+  width: 5px;
+  animation-duration: 50s;
+  animation-delay: -33s;
+  opacity: 0.31;
+}
+
+.deeltjes span:nth-child(14) {
+  left: 31.4%;
+  width: 13px;
+  animation-duration: 44s;
+  animation-delay: -34s;
+  opacity: 0.22;
+}
+
+.deeltjes span:nth-child(15) {
+  left: 84.0%;
+  width: 10px;
+  animation-duration: 40s;
+  animation-delay: -39s;
+  opacity: 0.13;
+}
+
+.deeltjes span:nth-child(16) {
+  left: 70.1%;
+  width: 20px;
+  animation-duration: 34s;
+  animation-delay: -22s;
+  opacity: 0.27;
+}
+
+.deeltjes span:nth-child(17) {
+  left: 2.3%;
+  width: 20px;
+  animation-duration: 36s;
+  animation-delay: -35s;
+  opacity: 0.23;
+}
+
+.deeltjes span:nth-child(18) {
+  left: 21.8%;
+  width: 10px;
+  animation-duration: 28s;
+  animation-delay: -14s;
+  opacity: 0.21;
+}
+
+.deeltjes span:nth-child(19) {
+  left: 87.1%;
+  width: 5px;
+  animation-duration: 30s;
+  animation-delay: -23s;
+  opacity: 0.18;
+}
+
+.deeltjes span:nth-child(20) {
+  left: 13.7%;
+  width: 16px;
+  animation-duration: 53s;
+  animation-delay: -16s;
+  opacity: 0.21;
+}
+
+.deeltjes span:nth-child(21) {
+  left: 35.9%;
+  width: 16px;
+  animation-duration: 57s;
+  animation-delay: -9s;
+  opacity: 0.16;
+}
+
+.deeltjes span:nth-child(22) {
+  left: 23.2%;
+  width: 8px;
+  animation-duration: 24s;
+  animation-delay: -48s;
+  opacity: 0.16;
+}
+
+.deeltjes span:nth-child(23) {
+  left: 28.2%;
+  width: 6px;
+  animation-duration: 38s;
+  animation-delay: -21s;
+  opacity: 0.24;
+}
+
+.deeltjes span:nth-child(24) {
+  left: 95.3%;
+  width: 4px;
+  animation-duration: 40s;
+  animation-delay: -51s;
+  opacity: 0.33;
+}
+
+.deeltjes span:nth-child(25) {
+  left: 68.1%;
+  width: 16px;
+  animation-duration: 38s;
+  animation-delay: -23s;
+  opacity: 0.23;
+}
+
+.deeltjes span:nth-child(26) {
+  left: 40.0%;
+  width: 8px;
+  animation-duration: 26s;
+  animation-delay: -12s;
+  opacity: 0.16;
+}
+
+.deeltjes span:nth-child(27) {
+  left: 34.0%;
+  width: 4px;
+  animation-duration: 27s;
+  animation-delay: -33s;
+  opacity: 0.24;
+}
+
+.deeltjes span:nth-child(28) {
+  left: 94.9%;
+  width: 4px;
+  animation-duration: 26s;
+  animation-delay: -12s;
+  opacity: 0.20;
+}
+
+.deeltjes span:nth-child(29) {
+  left: 63.4%;
+  width: 13px;
+  animation-duration: 44s;
+  animation-delay: -28s;
+  opacity: 0.15;
+}
+
+.deeltjes span:nth-child(30) {
+  left: 48.8%;
+  width: 20px;
+  animation-duration: 40s;
+  animation-delay: -18s;
+  opacity: 0.15;
+}

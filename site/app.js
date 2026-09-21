@@ -1,8 +1,12 @@
 const CFG = Object.assign({ refreshMs: 60000, oudNaMs: 45 * 60000 }, window.MENU_CONFIG || {});
 const CACHE = 'menukaart.laatste';
+const KOLOMMEN = 3;
+const MIN_SCHAAL = 0.35;
+const MAX_SCHAAL = 2.4;
+let laatsteModel = null;
 
 const RANGES = {
-  menu:       { range: 'menu!A:G',        verplicht: ['naam', 'prijs', 'categorie', 'toon', 'op'] },
+  menu:       { range: 'menu!A:H',        verplicht: ['naam', 'prijs', 'categorie', 'toon', 'op'] },
   categorien: { range: 'categorien!A:B',  verplicht: ['categorie', 'toon'] },
   teksten:    { range: 'teksten!A:B',     verplicht: ['sleutel', 'waarde'] },
 };
@@ -61,6 +65,7 @@ function model(data) {
       naam: String(r.naam).trim(),
       categorie: String(r.categorie).trim(),
       prijs: r.prijs === '' || r.prijs == null ? null : Number(r.prijs),
+      beschrijving: String(r.beschrijving ?? '').trim(),
       op: waar(r.op),
       opIsOp: waar(r['op=op']),
     }));
@@ -94,7 +99,7 @@ function teken({ teksten, groepen }) {
   tekst(el('footer'), teksten.footer);
   const label = (teksten.label_op_is_op || 'op = op').toString().trim();
 
-  el('kaart').replaceChildren(...groepen.map(g => {
+  const blokken = groepen.map(g => {
     const sectie = document.createElement('section');
     sectie.className = 'groep';
 
@@ -105,6 +110,9 @@ function teken({ teksten, groepen }) {
     }
 
     g.items.forEach(i => {
+      const blok = document.createElement('div');
+      blok.className = i.op ? 'item op' : 'item';
+
       const rij = document.createElement('div');
       rij.className = i.op ? 'regel op' : 'regel';
 
@@ -129,22 +137,115 @@ function teken({ teksten, groepen }) {
       prijs.textContent = i.prijs == null ? '' : euro.format(i.prijs);
       rij.append(prijs);
 
-      sectie.append(rij);
+      blok.append(rij);
+
+      if (i.beschrijving) {
+        const tekstje = document.createElement('p');
+        tekstje.className = 'beschrijving';
+        tekstje.textContent = i.beschrijving;
+        blok.append(tekstje);
+      }
+
+      sectie.append(blok);
     });
     return sectie;
-  }));
+  });
 
-  pasSchaalAan();
+  laatsteModel = { teksten, groepen };
+  vulKaart(blokken);
 }
 
-function pasSchaalAan() {
+// Zoekt de grootste schaal die nog op het scherm past, zodat de kolommen het beeld
+// vullen in plaats van bovenaan te blijven hangen.
+function telOmkeringen(kolom) {
+  let n = 0;
+  for (let i = 0; i < kolom.length; i++)
+    for (let j = i + 1; j < kolom.length; j++) if (kolom[i] > kolom[j]) n++;
+  return n;
+}
+
+function verdeelGretig(hoogtes, n) {
+  const som = new Array(n).fill(0);
+  const kolom = hoogtes.map(function (h) {
+    let k = 0;
+    for (let i = 1; i < n; i++) if (som[i] < som[k]) k = i;
+    som[k] += h;
+    return k;
+  });
+  return { max: Math.max(...som), kolom };
+}
+
+// Zoekt de verdeling met de kortste hoogste kolom, want die bepaalt hoe groot de
+// tekst kan worden. Bij gelijke hoogte wint de verdeling die de categorievolgorde
+// het minst omgooit.
+function verdeel(hoogtes, n) {
+  const g = hoogtes.length;
+  if (!g) return { max: 0, kolom: [] };
+  if (Math.pow(n, g) > 60000) return verdeelGretig(hoogtes, n);
+
+  const kolom = new Array(g);
+  const som = new Array(n).fill(0);
+  let beste = null;
+
+  const zoek = function (i) {
+    if (i === g) {
+      const max = Math.max.apply(null, som);
+      if (beste && max > beste.max + 0.5) return;
+      const omkeringen = telOmkeringen(kolom);
+      if (!beste || max < beste.max - 0.5 || omkeringen < beste.omkeringen)
+        beste = { max: max, omkeringen: omkeringen, kolom: kolom.slice() };
+      return;
+    }
+    for (let k = 0; k < n; k++) {
+      kolom[i] = k;
+      som[k] += hoogtes[i];
+      zoek(i + 1);
+      som[k] -= hoogtes[i];
+    }
+  };
+  zoek(0);
+  return beste;
+}
+
+// CSS-kolommen fragmenteren op een manier die niet betrouwbaar te meten is; een
+// overlopende kolom verdween buiten beeld. Daarom de verdeling hier zelf doen.
+function vulKaart(blokken) {
+  const kaart = el('kaart');
   const root = document.documentElement;
-  let s = 1;
-  root.style.setProperty('--schaal', s);
-  while (document.body.scrollHeight > window.innerHeight && s > 0.45) {
-    s -= 0.04;
-    root.style.setProperty('--schaal', s);
+
+  const kolommen = [];
+  for (let i = 0; i < KOLOMMEN; i++) {
+    const d = document.createElement('div');
+    d.className = 'kolom';
+    kolommen.push(d);
   }
+  kaart.replaceChildren(...kolommen);
+  if (!blokken.length) return;
+  kolommen[0].append(...blokken);
+
+  const meet = () => {
+    const marge = parseFloat(getComputedStyle(blokken[0]).marginBottom) || 0;
+    return blokken.map(b => b.getBoundingClientRect().height + marge);
+  };
+  const past = schaal => {
+    root.style.setProperty('--schaal', schaal);
+    return verdeel(meet(), KOLOMMEN).max <= kaart.clientHeight + 1;
+  };
+
+  let klein = MIN_SCHAAL;
+  if (past(MAX_SCHAAL)) {
+    klein = MAX_SCHAAL;
+  } else {
+    let groot = MAX_SCHAAL;
+    for (let i = 0; i < 16; i++) {
+      const mid = (klein + groot) / 2;
+      if (past(mid)) klein = mid; else groot = mid;
+    }
+    root.style.setProperty('--schaal', klein);
+  }
+
+  const kolom = verdeel(meet(), KOLOMMEN).kolom;
+  blokken.forEach((b, i) => kolommen[kolom[i]].append(b));
 }
 
 function toonStatus(op, gelukt) {
@@ -182,7 +283,9 @@ function plaatsNachtelijkeHerstart() {
 
 el('printknop').addEventListener('click', () => window.print());
 if (new URLSearchParams(location.search).has('kiosk')) el('printknop').hidden = true;
-window.addEventListener('resize', pasSchaalAan);
+const opnieuw = () => laatsteModel && teken(laatsteModel);
+window.addEventListener('resize', opnieuw);
+if (document.fonts) document.fonts.ready.then(opnieuw);
 
 if (!CFG.sheetId || !CFG.apiKey) {
   el('kaart').textContent = 'config.js ontbreekt of is niet ingevuld (sheetId / apiKey).';

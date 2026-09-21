@@ -59,12 +59,17 @@ een statische pagina en de reden dat de key beperkt en read-only is.
 | tabblad | inhoud |
 |---|---|
 | `sumup` | Ruwe CSV-export. Wordt volledig overschreven, niets met de hand aanpassen. |
-| `menu` | `op`, `op=op`, `toon`, `naam`, `categorie`, `prijs`, `item_id`. Naam en prijs zijn formules uit `sumup`; de rest is van jou. Rijvolgorde is de volgorde binnen een categorie. |
+| `menu` | `op`, `op=op`, `toon`, `naam`, `categorie`, `prijs`, `item_id`, `beschrijving`. Naam, prijs en beschrijving zijn formules uit `sumup`; de rest is van jou. Rijvolgorde is de volgorde binnen een categorie. |
 | `categorien` | `categorie`, `toon`. Rijvolgorde is de volgorde op de kaart. |
 | `teksten` | `sleutel`, `waarde`. Sleutels: `titel`, `ondertitel`, `mededeling`, `footer`, `label_op_is_op`. |
 
 Items zonder categorie, of met een categorie die niet in `categorien` staat, komen
 onderaan de kaart zonder kop.
+
+De beschrijving komt uit de SumUp-kolom *Description (Online Store and Invoices only)*,
+te vullen in SumUp bij het item. Leeg laten betekent geen regel onder het item. Typ je
+er met de hand iets overheen, dan blijft dat staan bij een volgende import — net als bij
+een handmatig overschreven prijs.
 
 ## Pagina
 

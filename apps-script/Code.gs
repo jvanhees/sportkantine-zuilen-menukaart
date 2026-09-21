@@ -1,6 +1,6 @@
 const TAB = { sumup: 'sumup', menu: 'menu', cat: 'categorien', tekst: 'teksten' };
 
-const MENU_KOPPEN  = ['op', 'op=op', 'toon', 'naam', 'categorie', 'prijs', 'item_id'];
+const MENU_KOPPEN  = ['op', 'op=op', 'toon', 'naam', 'categorie', 'prijs', 'item_id', 'beschrijving'];
 const CAT_KOPPEN   = ['categorie', 'toon'];
 const TEKST_KOPPEN = ['sleutel', 'waarde'];
 
@@ -8,8 +8,9 @@ const SUMUP_NAAM  = 'Item name';
 const SUMUP_PRIJS = 'Price';
 const SUMUP_CAT   = 'Category';
 const SUMUP_ID    = 'Item id (Do not change)';
+const SUMUP_OMSCHR = 'Description (Online Store and Invoices only)';
 
-const KOL = { op: 1, opIsOp: 2, toon: 3, naam: 4, categorie: 5, prijs: 6, id: 7 };
+const KOL = { op: 1, opIsOp: 2, toon: 3, naam: 4, categorie: 5, prijs: 6, id: 7, beschrijving: 8 };
 
 function onOpen() {
   SpreadsheetApp.getUi()
@@ -53,11 +54,22 @@ function setup() {
       ['label_op_is_op', 'op = op'],
     ]);
   }
-  if (cat.getLastRow() < 2) cat.getRange(2, 2).insertCheckboxes();
+  herstelCategorien_(cat);
 
   menu.setColumnWidth(KOL.id, 60);
   herstelOpmaak_(menu);
   SpreadsheetApp.getActive().toast('Tabbladen klaar. Importeer de SumUp-CSV in het tabblad "sumup".');
+}
+
+// Een met de hand toegevoegde categorie heeft een lege toon-cel, en leeg leest als
+// niet tonen. Dat laat een categorie stilzwijgend van de kaart verdwijnen.
+function herstelCategorien_(cat) {
+  const n = Math.max(cat.getLastRow() - 1, 0);
+  if (!n) return;
+  const bereik = cat.getRange(2, 2, n, 1);
+  const waarden = bereik.getValues();
+  bereik.insertCheckboxes();
+  bereik.setValues(waarden.map(function (r) { return [r[0] === '' ? true : r[0] === true]; }));
 }
 
 function herstelOpmaak_(menu) {
@@ -93,12 +105,44 @@ function leesSumup_() {
     if (id) items[id] = { categorie: String(r[idx[SUMUP_CAT]]).trim() };
   });
 
+  const omschr = kop.indexOf(SUMUP_OMSCHR);
+
   return {
     items: items,
     naamKol: kolomLetter(idx[SUMUP_NAAM] + 1),
     prijsKol: kolomLetter(idx[SUMUP_PRIJS] + 1),
     idKol: kolomLetter(idx[SUMUP_ID] + 1),
+    omschrKol: omschr === -1 ? null : kolomLetter(omschr + 1),
   };
+}
+
+function formule_(sumup, kol, rij) {
+  if (!kol) return '';
+  const zoek = 'MATCH($' + kolomLetter(KOL.id) + rij + ',' + TAB.sumup + '!$' + sumup.idKol + ':$' + sumup.idKol + ',0)';
+  return '=IFERROR(INDEX(' + TAB.sumup + '!$' + kol + ':$' + kol + ',' + zoek + '),"")';
+}
+
+// Bestaande sheets hebben nog geen kolom H. Alleen cellen vullen die noch een formule
+// noch een met de hand getypte tekst bevatten, zodat eigen omschrijvingen blijven staan.
+function vulBeschrijvingen_(menu, sumup) {
+  const n = menu.getLastRow() - 1;
+  if (n <= 0) return 0;
+
+  const bereik = menu.getRange(2, KOL.beschrijving, n, 1);
+  const formules = bereik.getFormulas();
+  const waarden = bereik.getValues();
+  const ids = menu.getRange(2, KOL.id, n, 1).getValues();
+
+  let aantal = 0;
+  const uit = formules.map(function (r, i) {
+    if (r[0]) return [r[0]];
+    if (String(waarden[i][0]).trim()) return [waarden[i][0]];
+    if (!String(ids[i][0]).trim()) return [''];
+    aantal++;
+    return [formule_(sumup, sumup.omschrKol, i + 2)];
+  });
+  bereik.setValues(uit);
+  return aantal;
 }
 
 function bijwerken() {
@@ -128,21 +172,25 @@ function bijwerken() {
     const start = menu.getLastRow() + 1;
     const rows = nieuw.map(function (id, i) {
       const r = start + i;
-      const zoek = 'MATCH($' + kolomLetter(KOL.id) + r + ',' + TAB.sumup + '!$' + sumup.idKol + ':$' + sumup.idKol + ',0)';
       const seed = sumup.items[id].categorie;
       return [
         false, false, true,
-        '=IFERROR(INDEX(' + TAB.sumup + '!$' + sumup.naamKol + ':$' + sumup.naamKol + ',' + zoek + '),"")',
+        formule_(sumup, sumup.naamKol, r),
         bekendeCats[seed] ? seed : '',
-        '=IFERROR(INDEX(' + TAB.sumup + '!$' + sumup.prijsKol + ':$' + sumup.prijsKol + ',' + zoek + '),"")',
+        formule_(sumup, sumup.prijsKol, r),
         id,
+        formule_(sumup, sumup.omschrKol, r),
       ];
     });
     menu.getRange(start, 1, rows.length, MENU_KOPPEN.length).setValues(rows);
   }
 
+  menu.getRange(1, 1, 1, MENU_KOPPEN.length).setValues([MENU_KOPPEN]).setFontWeight('bold');
+  const gevuld = vulBeschrijvingen_(menu, sumup);
   herstelOpmaak_(menu);
-  ss.toast(nieuw.length + ' nieuw, ' + verdwenen.length + ' verwijderd, ' + Object.keys(aanwezig).length + ' ongewijzigd.', 'Bijgewerkt', 8);
+  herstelCategorien_(cat);
+  ss.toast(nieuw.length + ' nieuw, ' + verdwenen.length + ' verwijderd, ' + Object.keys(aanwezig).length +
+           ' ongewijzigd, ' + gevuld + ' omschrijvingen gekoppeld.', 'Bijgewerkt', 8);
 }
 
 // Eenmalig bij het inrichten. Bewust niet onderdeel van bijwerken(): nieuwe categorieen
