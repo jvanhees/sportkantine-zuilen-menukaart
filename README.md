@@ -79,6 +79,8 @@ een handmatig overschreven prijs.
 - Ververst elke 60 seconden. Bij een storing blijft de laatste versie staan; de
   tijdstempel rechtsonder kleurt na 45 minuten.
 - `?kiosk` verbergt de printknop.
+- `?overscan=N` zet de veiligheidsrand op N procent, voor tv's die de randen
+  afsnijden. Standaard 5. `?overscan=0` zet hem uit op een gewone monitor.
 - Herlaadt zichzelf om 04:00 zodat codewijzigingen doorkomen.
 - Ctrl+P of de printknop geeft A4. Uitverkochte items staan er zonder streep door op.
 

@@ -239,7 +239,10 @@ function plaatsNachtelijkeHerstart() {
 }
 
 el('printknop').addEventListener('click', () => window.print());
-if (new URLSearchParams(location.search).has('kiosk')) el('printknop').hidden = true;
+const zoekparams = new URLSearchParams(location.search);
+if (zoekparams.has('kiosk')) el('printknop').hidden = true;
+if (zoekparams.has('overscan'))
+  document.documentElement.style.setProperty('--overscan', String(Number(zoekparams.get('overscan')) || 0));
 const opnieuw = () => laatsteModel && teken(laatsteModel);
 window.addEventListener('resize', opnieuw);
 if (document.fonts) document.fonts.ready.then(opnieuw);

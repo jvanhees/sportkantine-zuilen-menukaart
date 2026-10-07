@@ -2,6 +2,7 @@
   --schaal: 1;
   --kolommen: 3;
   --kolomgat: 48px;
+  --overscan: 5;
   --bg: #1b2027;
   --vlak: #303841;
   --lijn: #3c4650;
@@ -26,7 +27,7 @@ body {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  padding: 1.6rem 2rem;
+  padding: calc(1.6rem + var(--overscan) * 1vh) calc(2rem + var(--overscan) * 1vw);
   gap: 1.1rem;
 }
 
